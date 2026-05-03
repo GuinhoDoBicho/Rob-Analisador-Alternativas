@@ -5,51 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robô Analisador Das Alternativas Do Guinho</title>
     <style>
+        /* Estilo Robótico Roxo e Azul */
         body {
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             color: #00d4ff;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
-            user-select: none; /* Impede selecionar texto */
+            user-select: none; /* Bloqueia seleção de texto */
         }
 
         .container {
             max-width: 500px;
             margin: auto;
-            background: rgba(15, 15, 15, 0.9);
+            background: rgba(10, 10, 25, 0.95);
             padding: 25px;
             border-radius: 20px;
             border: 2px solid #6a0dad;
-            box-shadow: 0 0 30px rgba(106, 13, 173, 0.5);
+            box-shadow: 0 0 30px rgba(106, 13, 173, 0.6);
         }
 
-        /* Animação de Pulsação para o Texto de Análise */
-        @keyframes pulsando {
-            0% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); color: #ff00ff; }
-            100% { opacity: 0.4; transform: scale(1); }
-        }
-
-        .analisando-txt {
-            display: none;
-            margin: 20px 0;
-            font-weight: bold;
-            font-size: 1.2em;
-            animation: pulsando 1.5s infinite;
-        }
-
-        h1 { color: #a200ff; font-size: 1.8em; text-shadow: 0 0 10px #6a0dad; }
+        h1 { color: #a200ff; font-size: 1.6em; text-shadow: 0 0 10px #6a0dad; margin-bottom: 20px; }
 
         select, button {
-            width: 90%;
+            width: 100%;
             padding: 15px;
             margin: 10px 0;
             border-radius: 10px;
             border: none;
             font-size: 16px;
+            box-sizing: border-box;
         }
+
+        select { background: #1a1a2e; color: #00d4ff; border: 1px solid #6a0dad; }
 
         button {
             background: #6a0dad;
@@ -57,41 +46,67 @@
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+
+        button:hover { background: #00d4ff; color: #000; }
+
+        /* Animação de Carregamento */
+        @keyframes pulsando {
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); color: #ff00ff; }
+            100% { opacity: 0.4; transform: scale(1); }
+        }
+
+        .analisando-txt {
+            display: none;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.1em;
+            animation: pulsando 1.5s infinite;
         }
 
         .resultado {
-            background: #1a1a2e;
+            background: #0f0c29;
             padding: 15px;
             border-radius: 10px;
             margin-top: 20px;
-            border-left: 5px solid #00d4ff;
-            text-align: left;
+            border: 1px solid #00d4ff;
+            text-align: center;
             display: none;
+            font-weight: bold;
+            line-height: 1.8;
         }
 
+        /* Tela de Login */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 1000; display: flex;
+            background: #000; z-index: 9999; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
         }
 
-        footer { margin-top: 30px; font-size: 0.8em; opacity: 0.6; }
+        #login-screen input {
+            padding: 15px; width: 80%; max-width: 300px;
+            border-radius: 8px; border: 1px solid #6a0dad;
+            background: #111; color: #fff; text-align: center; margin-bottom: 10px;
+        }
+
+        footer { margin-top: 40px; font-size: 0.8em; opacity: 0.7; color: #fff; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <div id="login-screen">
-        <h2>Acesso Robótico</h2>
-        <input type="password" id="senha" placeholder="SENHA" style="padding:10px; border-radius:5px;">
-        <button onclick="verificarSenha()" style="width:200px;">Entrar</button>
+        <h2 style="color: #a200ff;">ACESSO AO ROBÔ</h2>
+        <input type="password" id="senha-input" placeholder="DIGITE A SENHA">
+        <button onclick="verificarAcesso()" style="width: 200px;">ENTRAR</button>
     </div>
 
     <div class="container">
         <h1>🤖 Robô Analisador Das Alternativas Do Guinho</h1>
         
-        <p>Selecione a loteria:</p>
-        <select id="loteria">
+        <label>Escolha a Loteria:</label>
+        <select id="loteria-select">
             <option value="lotinha">Lotinha</option>
             <option value="quininha">Quininha</option>
             <option value="seninha">Seninha</option>
@@ -99,83 +114,104 @@
             <option value="lotomaniazia">Lotomaniazia</option>
         </select>
 
-        <button onclick="processarAnalise()">ANALISAR AGORA</button>
+        <button onclick="gerarAnalise()">ANALISAR</button>
 
-        <div id="status" class="analisando-txt">🔍 Analisando sorteios da loteria escolhida...</div>
+        <div id="loading-text" class="analisando-txt">🔍 Analisando sorteios da loteria escolhida...</div>
         
-        <div id="resultado-bloco" class="resultado"></div>
+        <div id="resultado-display" class="resultado"></div>
         
-        <button id="btn-share" style="display:none; background:#00d4ff; color:#000;" onclick="compartilhar()">Compartilhar Resultado</button>
+        <button id="btn-copy-share" style="display:none; background:#00d4ff; color:#000;" onclick="fazerCompartilhamento()">Compartilhar Análise</button>
     </div>
 
     <footer>Criado por Guinho Lotofácil</footer>
 
     <script>
-        // Bloqueio de teclas de inspeção
+        // 1. Bloqueio de Teclas de Atalho (F12, Ctrl+U, etc)
         document.onkeydown = function(e) {
-            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false;
+            if (e.keyCode == 123 || (e.ctrlKey && (e.shiftKey && e.keyCode == 73) || e.keyCode == 85)) {
+                return false;
+            }
         };
 
-        if (localStorage.getItem("logado") === "sim") {
+        // 2. Memória de Login
+        if (localStorage.getItem("robo_acesso") === "concedido") {
             document.getElementById("login-screen").style.display = "none";
         }
 
-        function verificarSenha() {
-            if (document.getElementById("senha").value === "ROBOANALISADORALTERNATIVA") {
-                localStorage.setItem("logado", "sim");
+        function verificarAcesso() {
+            const senha = document.getElementById("senha-input").value;
+            if (senha === "ROBOANALISADORALTERNATIVA") {
+                localStorage.setItem("robo_acesso", "concedido");
                 document.getElementById("login-screen").style.display = "none";
-            } else { alert("Senha incorreta!"); }
-        }
-
-        function gerarFixos(qtd, max, min = 1) {
-            const data = new Date();
-            const seed = data.getDate() + data.getMonth() + data.getFullYear();
-            let lista = [];
-            let i = 0;
-            while(lista.length < qtd) {
-                let n = Math.floor(Math.abs(Math.sin(seed + i) * (max - min + 1))) + min;
-                if(!lista.includes(n)) lista.push(n);
-                i++;
+            } else {
+                alert("SENHA INCORRETA!");
             }
-            return lista.sort((a,b) => a-b).join(" - ");
         }
 
-        function processarAnalise() {
-            const status = document.getElementById("status");
-            const resBloco = document.getElementById("resultado-bloco");
-            const btnShare = document.getElementById("btn-share");
-            
-            resBloco.style.display = "none";
-            btnShare.style.display = "none";
-            status.style.display = "block";
+        // 3. Lógica Determinística (Fixa por Dia)
+        function obterNumeros(quantidade, maximo, minimo = 1) {
+            const dataHoje = new Date().toLocaleDateString();
+            let semente = 0;
+            for (let i = 0; i < dataHoje.length; i++) {
+                semente += dataHoje.charCodeAt(i);
+            }
 
-            // Tempo aleatório entre 8 e 10 segundos (8000ms a 10000ms)
-            const tempoEspera = Math.floor(Math.random() * (10000 - 8000 + 1)) + 8000;
+            let resultado = [];
+            let contador = 0;
+            while (resultado.length < quantidade) {
+                // Matemática que gera sempre o mesmo número na mesma data
+                let n = Math.floor(Math.abs(Math.sin(semente + contador) * (maximo - minimo + 1))) + minimo;
+                if (!resultado.includes(n)) {
+                    resultado.push(n);
+                }
+                contador++;
+            }
+            return resultado.sort((a, b) => a - b).join(" - ");
+        }
+
+        // 4. Ação do Botão Analisar
+        function gerarAnalise() {
+            const loading = document.getElementById("loading-text");
+            const display = document.getElementById("resultado-display");
+            const shareBtn = document.getElementById("btn-copy-share");
+            
+            display.style.display = "none";
+            shareBtn.style.display = "none";
+            loading.style.display = "block";
+
+            // Tempo entre 8 e 10 segundos
+            const tempoRandom = Math.floor(Math.random() * 2001) + 8000;
 
             setTimeout(() => {
-                const tipo = document.getElementById("loteria").value;
-                let palpite = "";
+                const escolha = document.getElementById("loteria-select").value;
+                let textoFinal = "";
 
-                if(tipo === "lotinha") palpite = gerarFixos(21, 25);
-                if(tipo === "quininha") palpite = gerarFixos(40, 80);
-                if(tipo === "seninha") palpite = gerarFixos(40, 60);
-                if(tipo === "diadesortinha") palpite = gerarFixos(20, 31);
-                if(tipo === "lotomaniazia") palpite = gerarFixos(80, 99, 0);
+                if (escolha === "lotinha") textoFinal = obterNumeros(21, 25);
+                if (escolha === "quininha") textoFinal = obterNumeros(40, 80);
+                if (escolha === "seninha") textoFinal = obterNumeros(40, 60);
+                if (escolha === "diadesortinha") textoFinal = obterNumeros(20, 31);
+                if (escolha === "lotomaniazia") textoFinal = obterNumeros(80, 99, 0);
 
-                status.style.display = "none";
-                resBloco.innerHTML = "<strong>RESULTADO DA ANÁLISE:</strong><br><br>" + palpite;
-                resBloco.style.display = "block";
-                btnShare.style.display = "block";
-            }, tempoEspera);
+                loading.style.display = "none";
+                display.innerHTML = "<strong>DEZENAS ANALISADAS:</strong><br><br>" + textoFinal;
+                display.style.display = "block";
+                shareBtn.style.display = "block";
+            }, tempoRandom);
         }
 
-        function compartilhar() {
-            const texto = document.getElementById("resultado-bloco").innerText;
+        // 5. Compartilhamento Personalizado
+        function fazerCompartilhamento() {
+            const dezenas = document.getElementById("resultado-display").innerText.replace("DEZENAS ANALISADAS:", "");
+            const mensagem = "Análises feita pelo robô analisador viu que essas dezenas são as melhores para serem jogadas hoje:\n\n" + dezenas;
+
             if (navigator.share) {
-                navigator.share({ title: 'Análise do Robô', text: texto });
+                navigator.share({
+                    title: 'Robô Analisador',
+                    text: mensagem
+                });
             } else {
-                alert("Análise copiada!");
-                navigator.clipboard.writeText(texto);
+                navigator.clipboard.writeText(mensagem);
+                alert("Copiado! Agora cole no WhatsApp.");
             }
         }
     </script>
