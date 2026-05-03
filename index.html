@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robô Analisador Das Alternativas Do Guinho</title>
     <style>
-        /* Estilo Robótico Roxo e Azul */
+        /* Estética Robótica: Roxo e Azul */
         body {
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             color: #00d4ff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
-            user-select: none; /* Bloqueia seleção de texto */
+            user-select: none;
         }
 
         .container {
@@ -26,19 +26,21 @@
             box-shadow: 0 0 30px rgba(106, 13, 173, 0.6);
         }
 
-        h1 { color: #a200ff; font-size: 1.6em; text-shadow: 0 0 10px #6a0dad; margin-bottom: 20px; }
+        h1 { color: #a200ff; font-size: 1.6em; text-shadow: 0 0 10px #6a0dad; }
 
-        select, button {
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9em; }
+
+        select, input, button {
             width: 100%;
             padding: 15px;
-            margin: 10px 0;
+            margin: 8px 0;
             border-radius: 10px;
             border: none;
             font-size: 16px;
             box-sizing: border-box;
         }
 
-        select { background: #1a1a2e; color: #00d4ff; border: 1px solid #6a0dad; }
+        select, input { background: #1a1a2e; color: #00d4ff; border: 1px solid #6a0dad; }
 
         button {
             background: #6a0dad;
@@ -51,7 +53,7 @@
 
         button:hover { background: #00d4ff; color: #000; }
 
-        /* Animação de Carregamento */
+        /* Animação de Análise */
         @keyframes pulsando {
             0% { opacity: 0.4; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.03); color: #ff00ff; }
@@ -62,7 +64,6 @@
             display: none;
             margin: 20px 0;
             font-weight: bold;
-            font-size: 1.1em;
             animation: pulsando 1.5s infinite;
         }
 
@@ -72,41 +73,33 @@
             border-radius: 10px;
             margin-top: 20px;
             border: 1px solid #00d4ff;
-            text-align: center;
             display: none;
             font-weight: bold;
-            line-height: 1.8;
         }
 
-        /* Tela de Login */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
         }
 
-        #login-screen input {
-            padding: 15px; width: 80%; max-width: 300px;
-            border-radius: 8px; border: 1px solid #6a0dad;
-            background: #111; color: #fff; text-align: center; margin-bottom: 10px;
-        }
-
-        footer { margin-top: 40px; font-size: 0.8em; opacity: 0.7; color: #fff; }
+        footer { margin-top: 40px; font-size: 0.8em; opacity: 0.7; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
+    <!-- Sistema de Acesso -->
     <div id="login-screen">
         <h2 style="color: #a200ff;">ACESSO AO ROBÔ</h2>
-        <input type="password" id="senha-input" placeholder="DIGITE A SENHA">
+        <input type="password" id="senha-input" placeholder="DIGITE A SENHA" style="max-width:300px;">
         <button onclick="verificarAcesso()" style="width: 200px;">ENTRAR</button>
     </div>
 
     <div class="container">
         <h1>🤖 Robô Analisador Das Alternativas Do Guinho</h1>
         
-        <label>Escolha a Loteria:</label>
-        <select id="loteria-select">
+        <label>1. Selecione a Loteria:</label>
+        <select id="loteria-select" onchange="atualizarLimites()">
             <option value="lotinha">Lotinha</option>
             <option value="quininha">Quininha</option>
             <option value="seninha">Seninha</option>
@@ -114,66 +107,88 @@
             <option value="lotomaniazia">Lotomaniazia</option>
         </select>
 
+        <label id="label-qtd">2. Quantas dezenas quer analisar? (3 a 23):</label>
+        <input type="number" id="qtd-dezenas" value="21" min="3" max="23">
+
         <button onclick="gerarAnalise()">ANALISAR</button>
 
         <div id="loading-text" class="analisando-txt">🔍 Analisando sorteios da loteria escolhida...</div>
         
         <div id="resultado-display" class="resultado"></div>
         
-        <button id="btn-copy-share" style="display:none; background:#00d4ff; color:#000;" onclick="fazerCompartilhamento()">Compartilhar Análise</button>
+        <button id="btn-share" style="display:none; background:#00d4ff; color:#000;" onclick="fazerCompartilhamento()">Compartilhar Análise</button>
     </div>
 
     <footer>Criado por Guinho Lotofácil</footer>
 
     <script>
-        // 1. Bloqueio de Teclas de Atalho (F12, Ctrl+U, etc)
+        // Bloqueios de segurança
         document.onkeydown = function(e) {
-            if (e.keyCode == 123 || (e.ctrlKey && (e.shiftKey && e.keyCode == 73) || e.keyCode == 85)) {
-                return false;
-            }
+            if (e.keyCode == 123 || (e.ctrlKey && (e.shiftKey && e.keyCode == 73) || e.keyCode == 85)) return false;
         };
 
-        // 2. Memória de Login
+        // Memória de Dispositivo (Senha)
         if (localStorage.getItem("robo_acesso") === "concedido") {
             document.getElementById("login-screen").style.display = "none";
         }
 
         function verificarAcesso() {
-            const senha = document.getElementById("senha-input").value;
-            if (senha === "ROBOANALISADORALTERNATIVA") {
+            if (document.getElementById("senha-input").value === "ROBOANALISADORALTERNATIVA") {
                 localStorage.setItem("robo_acesso", "concedido");
                 document.getElementById("login-screen").style.display = "none";
-            } else {
-                alert("SENHA INCORRETA!");
-            }
+            } else { alert("SENHA INCORRETA!"); }
         }
 
-        // 3. Lógica Determinística (Fixa por Dia)
+        // Função para atualizar os limites do INPUT de acordo com a loteria
+        function atualizarLimites() {
+            const escolha = document.getElementById("loteria-select").value;
+            const inputQtd = document.getElementById("qtd-dezenas");
+            const label = document.getElementById("label-qtd");
+
+            const limites = {
+                'lotinha': { min: 3, max: 23, def: 21 },
+                'quininha': { min: 5, max: 45, def: 40 },
+                'seninha': { min: 6, max: 40, def: 40 },
+                'diadesortinha': { min: 7, max: 23, def: 20 },
+                'lotomaniazia': { min: 20, max: 85, def: 80 }
+            };
+
+            const config = limites[escolha];
+            inputQtd.min = config.min;
+            inputQtd.max = config.max;
+            inputQtd.value = config.def;
+            label.innerText = `2. Quantas dezenas quer analisar? (${config.min} a ${config.max}):`;
+        }
+
+        // Gerador Determinístico (Fixo por dia)
         function obterNumeros(quantidade, maximo, minimo = 1) {
             const dataHoje = new Date().toLocaleDateString();
             let semente = 0;
-            for (let i = 0; i < dataHoje.length; i++) {
-                semente += dataHoje.charCodeAt(i);
-            }
+            for (let i = 0; i < dataHoje.length; i++) { semente += dataHoje.charCodeAt(i); }
 
             let resultado = [];
             let contador = 0;
             while (resultado.length < quantidade) {
-                // Matemática que gera sempre o mesmo número na mesma data
-                let n = Math.floor(Math.abs(Math.sin(semente + contador) * (maximo - minimo + 1))) + minimo;
-                if (!resultado.includes(n)) {
-                    resultado.push(n);
-                }
+                let n = Math.floor(Math.abs(Math.sin(semente + contador + quantidade) * (maximo - minimo + 1))) + minimo;
+                if (!resultado.includes(n)) { resultado.push(n); }
                 contador++;
             }
             return resultado.sort((a, b) => a - b).join(" - ");
         }
 
-        // 4. Ação do Botão Analisar
         function gerarAnalise() {
+            const qtdDesejada = parseInt(document.getElementById("qtd-dezenas").value);
+            const inputQtd = document.getElementById("qtd-dezenas");
+
+            // Validação de segurança para não ultrapassar os limites
+            if (qtdDesejada < inputQtd.min || qtdDesejada > inputQtd.max) {
+                alert(`Por favor, escolha entre ${inputQtd.min} e ${inputQtd.max} dezenas.`);
+                return;
+            }
+
             const loading = document.getElementById("loading-text");
             const display = document.getElementById("resultado-display");
-            const shareBtn = document.getElementById("btn-copy-share");
+            const shareBtn = document.getElementById("btn-share");
             
             display.style.display = "none";
             shareBtn.style.display = "none";
@@ -186,11 +201,12 @@
                 const escolha = document.getElementById("loteria-select").value;
                 let textoFinal = "";
 
-                if (escolha === "lotinha") textoFinal = obterNumeros(21, 25);
-                if (escolha === "quininha") textoFinal = obterNumeros(40, 80);
-                if (escolha === "seninha") textoFinal = obterNumeros(40, 60);
-                if (escolha === "diadesortinha") textoFinal = obterNumeros(20, 31);
-                if (escolha === "lotomaniazia") textoFinal = obterNumeros(80, 99, 0);
+                // Aplica os limites de cada jogo conforme solicitado
+                if (escolha === "lotinha") textoFinal = obterNumeros(qtdDesejada, 25);
+                if (escolha === "quininha") textoFinal = obterNumeros(qtdDesejada, 80);
+                if (escolha === "seninha") textoFinal = obterNumeros(qtdDesejada, 60);
+                if (escolha === "diadesortinha") textoFinal = obterNumeros(qtdDesejada, 31);
+                if (escolha === "lotomaniazia") textoFinal = obterNumeros(qtdDesejada, 99, 0);
 
                 loading.style.display = "none";
                 display.innerHTML = "<strong>DEZENAS ANALISADAS:</strong><br><br>" + textoFinal;
@@ -199,19 +215,15 @@
             }, tempoRandom);
         }
 
-        // 5. Compartilhamento Personalizado
         function fazerCompartilhamento() {
             const dezenas = document.getElementById("resultado-display").innerText.replace("DEZENAS ANALISADAS:", "");
             const mensagem = "Análises feita pelo robô analisador viu que essas dezenas são as melhores para serem jogadas hoje:\n\n" + dezenas;
 
             if (navigator.share) {
-                navigator.share({
-                    title: 'Robô Analisador',
-                    text: mensagem
-                });
+                navigator.share({ title: 'Robô Analisador', text: mensagem });
             } else {
                 navigator.clipboard.writeText(mensagem);
-                alert("Copiado! Agora cole no WhatsApp.");
+                alert("Copiado com sucesso!");
             }
         }
     </script>
