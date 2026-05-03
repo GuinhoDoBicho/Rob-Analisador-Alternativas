@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robô Analisador Das Alternativas Do Guinho</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #00d4ff;
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            user-select: none; /* Impede selecionar texto */
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: rgba(15, 15, 15, 0.9);
+            padding: 25px;
+            border-radius: 20px;
+            border: 2px solid #6a0dad;
+            box-shadow: 0 0 30px rgba(106, 13, 173, 0.5);
+        }
+
+        /* Animação de Pulsação para o Texto de Análise */
+        @keyframes pulsando {
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); color: #ff00ff; }
+            100% { opacity: 0.4; transform: scale(1); }
+        }
+
+        .analisando-txt {
+            display: none;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.2em;
+            animation: pulsando 1.5s infinite;
+        }
+
+        h1 { color: #a200ff; font-size: 1.8em; text-shadow: 0 0 10px #6a0dad; }
+
+        select, button {
+            width: 90%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+        }
+
+        button {
+            background: #6a0dad;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .resultado {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #00d4ff;
+            text-align: left;
+            display: none;
+        }
+
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 1000; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        footer { margin-top: 30px; font-size: 0.8em; opacity: 0.6; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="login-screen">
+        <h2>Acesso Robótico</h2>
+        <input type="password" id="senha" placeholder="SENHA" style="padding:10px; border-radius:5px;">
+        <button onclick="verificarSenha()" style="width:200px;">Entrar</button>
+    </div>
+
+    <div class="container">
+        <h1>🤖 Robô Analisador Das Alternativas Do Guinho</h1>
+        
+        <p>Selecione a loteria:</p>
+        <select id="loteria">
+            <option value="lotinha">Lotinha</option>
+            <option value="quininha">Quininha</option>
+            <option value="seninha">Seninha</option>
+            <option value="diadesortinha">Dia De Sortinha</option>
+            <option value="lotomaniazia">Lotomaniazia</option>
+        </select>
+
+        <button onclick="processarAnalise()">ANALISAR AGORA</button>
+
+        <div id="status" class="analisando-txt">🔍 Analisando sorteios da loteria escolhida...</div>
+        
+        <div id="resultado-bloco" class="resultado"></div>
+        
+        <button id="btn-share" style="display:none; background:#00d4ff; color:#000;" onclick="compartilhar()">Compartilhar Resultado</button>
+    </div>
+
+    <footer>Criado por Guinho Lotofácil</footer>
+
+    <script>
+        // Bloqueio de teclas de inspeção
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false;
+        };
+
+        if (localStorage.getItem("logado") === "sim") {
+            document.getElementById("login-screen").style.display = "none";
+        }
+
+        function verificarSenha() {
+            if (document.getElementById("senha").value === "ROBOANALISADORALTERNATIVA") {
+                localStorage.setItem("logado", "sim");
+                document.getElementById("login-screen").style.display = "none";
+            } else { alert("Senha incorreta!"); }
+        }
+
+        function gerarFixos(qtd, max, min = 1) {
+            const data = new Date();
+            const seed = data.getDate() + data.getMonth() + data.getFullYear();
+            let lista = [];
+            let i = 0;
+            while(lista.length < qtd) {
+                let n = Math.floor(Math.abs(Math.sin(seed + i) * (max - min + 1))) + min;
+                if(!lista.includes(n)) lista.push(n);
+                i++;
+            }
+            return lista.sort((a,b) => a-b).join(" - ");
+        }
+
+        function processarAnalise() {
+            const status = document.getElementById("status");
+            const resBloco = document.getElementById("resultado-bloco");
+            const btnShare = document.getElementById("btn-share");
+            
+            resBloco.style.display = "none";
+            btnShare.style.display = "none";
+            status.style.display = "block";
+
+            // Tempo aleatório entre 8 e 10 segundos (8000ms a 10000ms)
+            const tempoEspera = Math.floor(Math.random() * (10000 - 8000 + 1)) + 8000;
+
+            setTimeout(() => {
+                const tipo = document.getElementById("loteria").value;
+                let palpite = "";
+
+                if(tipo === "lotinha") palpite = gerarFixos(21, 25);
+                if(tipo === "quininha") palpite = gerarFixos(40, 80);
+                if(tipo === "seninha") palpite = gerarFixos(40, 60);
+                if(tipo === "diadesortinha") palpite = gerarFixos(20, 31);
+                if(tipo === "lotomaniazia") palpite = gerarFixos(80, 99, 0);
+
+                status.style.display = "none";
+                resBloco.innerHTML = "<strong>RESULTADO DA ANÁLISE:</strong><br><br>" + palpite;
+                resBloco.style.display = "block";
+                btnShare.style.display = "block";
+            }, tempoEspera);
+        }
+
+        function compartilhar() {
+            const texto = document.getElementById("resultado-bloco").innerText;
+            if (navigator.share) {
+                navigator.share({ title: 'Análise do Robô', text: texto });
+            } else {
+                alert("Análise copiada!");
+                navigator.clipboard.writeText(texto);
+            }
+        }
+    </script>
+</body>
+</html>
