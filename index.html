@@ -94,20 +94,20 @@
     <div id="login-screen">
         <h2 style="color: #a200ff;">🤖 ACESSO AO ROBÔ</h2>
         
-        <input type="password" id="senha-input" placeholder="DIGITE A SENHA VITALÍCIA" style="max-width:300px;">
-        <button onclick="verificarSenha()" style="width: 250px;">ENTRAR AGORA</button>
+        <input type="text" id="senha-valida" placeholder="DIGITE A SENHA VITALÍCIA" style="max-width:300px;">
+        <button onclick="conferirSenha()" style="width: 250px;">ENTRAR AGORA</button>
         
         <div id="demo-area" style="margin-top: 30px;">
             <p style="color: #888;">Ou use a versão de teste:</p>
-            <button id="btn-teste" onclick="usarDemo()" style="width: 250px; background: #24243e; border: 1px solid #6a0dad;">TESTE GRÁTIS (3 USOS)</button>
+            <button id="btn-teste" onclick="ativarDemo()" style="width: 250px; background: #24243e; border: 1px solid #6a0dad;">CARREGANDO TESTE...</button>
             <div id="msg-bloqueio" style="display:none;">
                 <p style="color: #ff00ff;">❌ Seus 3 acessos de teste acabaram!</p>
-                <a href="https://mpago.la/1VizFTj" class="btn-comprar">COMPRAR ACESSO VITALÍCIO</a>
+                <a href="https://mpago.la/1VizFTj" target="_blank" class="btn-comprar">COMPRAR ACESSO VITALÍCIO</a>
             </div>
         </div>
     </div>
 
-    <div class="container">
+    <div class="container" id="main-content">
         <h1>🤖 Robô Analisador Das Alternativas Do Guinho</h1>
         
         <label>1. Escolha a Loteria:</label>
@@ -139,17 +139,30 @@
             if (e.keyCode == 123 || (e.ctrlKey && (e.shiftKey && e.keyCode == 73) || e.keyCode == 85)) return false;
         };
 
-        // GESTÃO DE ACESSOS
         const acessosDemoMax = 3;
         let modoDemoAtivo = false;
 
-        function carregarStatus() {
-            if (localStorage.getItem("acesso_vitalicio") === "OK") {
+        // FUNÇÃO DE VERIFICAÇÃO DE SENHA (CORRIGIDA)
+        function conferirSenha() {
+            const senhaDigitada = document.getElementById("senha-valida").value.trim().toUpperCase();
+            const senhaCorreta = "ROBOANALISADORALTERNATIVA";
+
+            if (senhaDigitada === senhaCorreta) {
+                localStorage.setItem("guinho_vitalicio", "ATIVADO");
+                document.getElementById("login-screen").style.display = "none";
+            } else {
+                alert("SENHA INCORRETA! Tente novamente.");
+            }
+        }
+
+        // GESTÃO DE STATUS INICIAL
+        function iniciarSite() {
+            if (localStorage.getItem("guinho_vitalicio") === "ATIVADO") {
                 document.getElementById("login-screen").style.display = "none";
                 return;
             }
 
-            let usados = parseInt(localStorage.getItem("usos_demo") || "0");
+            let usados = parseInt(localStorage.getItem("usos_demo_guinho") || "0");
             const btnTeste = document.getElementById("btn-teste");
             const msgBloqueio = document.getElementById("msg-bloqueio");
 
@@ -161,25 +174,17 @@
             }
         }
 
-        carregarStatus();
+        window.onload = iniciarSite;
 
-        function verificarSenha() {
-            if (document.getElementById("senha-input").value === "ROBOANALISADORALTERNATIVA") {
-                localStorage.setItem("acesso_vitalicio", "OK");
-                document.getElementById("login-screen").style.display = "none";
-            } else { alert("Senha incorreta!"); }
-        }
-
-        function usarDemo() {
-            let usados = parseInt(localStorage.getItem("usos_demo") || "0");
+        function ativarDemo() {
+            let usados = parseInt(localStorage.getItem("usos_demo_guinho") || "0");
             if (usados < acessosDemoMax) {
                 modoDemoAtivo = true;
                 document.getElementById("login-screen").style.display = "none";
-                alert("Modo de Teste Ativado. Esta análise contará como um uso.");
+                alert("Modo de Teste: Esta análise contará como um uso.");
             }
         }
 
-        // LÓGICA DE LOTERIA E DEZENAS (Mantida conforme solicitado)
         function atualizarLimites() {
             const escolha = document.getElementById("loteria-select").value;
             const inputQtd = document.getElementById("qtd-dezenas");
@@ -222,11 +227,10 @@
                 return;
             }
 
-            // Se for demo, contabiliza o uso agora
             if (modoDemoAtivo) {
-                let usados = parseInt(localStorage.getItem("usos_demo") || "0");
-                localStorage.setItem("usos_demo", (usados + 1).toString());
-                modoDemoAtivo = false; // Desativa flag para evitar contagem dupla
+                let usados = parseInt(localStorage.getItem("usos_demo_guinho") || "0");
+                localStorage.setItem("usos_demo_guinho", (usados + 1).toString());
+                modoDemoAtivo = false; 
             }
 
             const loading = document.getElementById("loading-text");
@@ -254,11 +258,9 @@
                 display.style.display = "block";
                 shareBtn.style.display = "block";
                 
-                // Se o utilizador era demo, avisa que acabou após a análise
-                let totalUsados = parseInt(localStorage.getItem("usos_demo"));
-                if (totalUsados >= acessosDemoMax && localStorage.getItem("acesso_vitalicio") !== "OK") {
+                if (parseInt(localStorage.getItem("usos_demo_guinho")) >= acessosDemoMax && localStorage.getItem("guinho_vitalicio") !== "ATIVADO") {
                     setTimeout(() => {
-                        alert("Este foi seu último acesso de teste! Compre o acesso vitalício para continuar.");
+                        alert("Teste finalizado! Compre o acesso vitalício.");
                         location.reload();
                     }, 5000);
                 }
