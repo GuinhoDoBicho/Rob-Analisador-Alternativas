@@ -142,7 +142,6 @@
         const acessosDemoMax = 3;
         let modoDemoAtivo = false;
 
-        // FUNÇÃO DE VERIFICAÇÃO DE SENHA (CORRIGIDA)
         function conferirSenha() {
             const senhaDigitada = document.getElementById("senha-valida").value.trim().toUpperCase();
             const senhaCorreta = "ROBOANALISADORALTERNATIVA";
@@ -155,7 +154,6 @@
             }
         }
 
-        // GESTÃO DE STATUS INICIAL
         function iniciarSite() {
             if (localStorage.getItem("guinho_vitalicio") === "ATIVADO") {
                 document.getElementById("login-screen").style.display = "none";
@@ -203,10 +201,21 @@
             label.innerText = `2. Dezenas para analisar? (${c.min} a ${c.max}):`;
         }
 
+        // LÓGICA ATUALIZADA: MUDANÇA A CADA 12 HORAS
         function obterNumeros(qtd, max, min = 1) {
-            const hoje = new Date().toLocaleDateString();
+            const agora = new Date();
+            const dataHoje = agora.toLocaleDateString();
+            
+            // Verifica se a hora atual é menor que 12. Se for, é MANHÃ. Se não, é TARDE.
+            const ciclo12Horas = agora.getHours() < 12 ? "MANHA" : "TARDE";
+            
+            // A semente agora junta a Data + O Ciclo (Ex: "25/05/2026MANHA")
+            const baseSemente = dataHoje + ciclo12Horas;
+            
             let seed = 0;
-            for (let i = 0; i < hoje.length; i++) seed += hoje.charCodeAt(i);
+            for (let i = 0; i < baseSemente.length; i++) {
+                seed += baseSemente.charCodeAt(i);
+            }
             
             let res = [];
             let i = 0;
